@@ -13,7 +13,6 @@ import random
 
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
 import torch.optim
 import torch.utils.data
 import torch.backends.cudnn
@@ -183,11 +182,11 @@ def train(epoch, model, optimizer, scheduler, criterion, train_loader,
 
         scheduler.step()
         if run_config['tensorboard']:
-            writer.add_scalar('Train/LearningRate', scheduler.get_lr()[0],
-                              global_step)
+            writer.add_scalar('Train/LearningRate',
+                              scheduler.get_lr()[0], global_step)
 
-        data = Variable(data.cuda())
-        targets = Variable(targets.cuda())
+        data = data.cuda()
+        targets = targets.cuda()
 
         optimizer.zero_grad()
 
@@ -199,8 +198,8 @@ def train(epoch, model, optimizer, scheduler, criterion, train_loader,
 
         _, preds = torch.max(outputs, dim=1)
 
-        loss_ = loss.data[0]
-        correct_ = preds.eq(targets).cpu().sum().data.numpy()[0]
+        loss_ = loss.item()
+        correct_ = preds.eq(targets).sum().item()
         num = data.size(0)
 
         accuracy = correct_ / num
@@ -248,16 +247,17 @@ def test(epoch, model, criterion, test_loader, run_config, writer):
                 data, normalize=True, scale_each=True)
             writer.add_image('Test/Image', image, epoch)
 
-        data = Variable(data.cuda(), volatile=True)
-        targets = Variable(targets.cuda(), volatile=True)
+        data = data.cuda()
+        targets = targets.cuda()
 
-        outputs = model(data)
+        with torch.no_grad():
+            outputs = model(data)
         loss = criterion(outputs, targets)
 
         _, preds = torch.max(outputs, dim=1)
 
-        loss_ = loss.data[0]
-        correct_ = preds.eq(targets).cpu().sum().data.numpy()[0]
+        loss_ = loss.item()
+        correct_ = preds.eq(targets).sum().item()
         num = data.size(0)
 
         loss_meter.update(loss_, num)
