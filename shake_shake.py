@@ -1,5 +1,3 @@
-# coding: utf-8
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -103,7 +101,7 @@ class BasicBlock(nn.Module):
         else:
             shake_config = (False, False, False)
 
-        alpha, beta = get_alpha_beta(x.size(0), shake_config, x.is_cuda)
+        alpha, beta = get_alpha_beta(x.size(0), shake_config, x.device)
         y = shake_function(x1, x2, alpha, beta)
 
         return self.shortcut(x) + y
