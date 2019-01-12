@@ -231,6 +231,18 @@ def train(epoch, model, optimizer, scheduler, criterion, train_loader,
         writer.add_scalar('Train/Accuracy', accuracy_meter.avg, epoch)
         writer.add_scalar('Train/Time', elapsed, epoch)
 
+    train_log = OrderedDict({
+        'epoch':
+        epoch,
+        'train':
+        OrderedDict({
+            'loss': loss_meter.avg,
+            'accuracy': accuracy_meter.avg,
+            'time': elapsed,
+        }),
+    })
+    return train_log
+
 
 def test(epoch, model, criterion, test_loader, run_config, writer):
     logger.info('Test {}'.format(epoch))
@@ -280,7 +292,17 @@ def test(epoch, model, criterion, test_loader, run_config, writer):
         for name, param in model.named_parameters():
             writer.add_histogram(name, param, global_step)
 
-    return accuracy
+    test_log = OrderedDict({
+        'epoch':
+        epoch,
+        'test':
+        OrderedDict({
+            'loss': loss_meter.avg,
+            'accuracy': accuracy,
+            'time': elapsed,
+        }),
+    })
+    return test_log
 
 
 def main():
@@ -336,18 +358,25 @@ def main():
     # run test before start training
     test(0, model, criterion, test_loader, run_config, writer)
 
+    epoch_logs = []
     for epoch in range(1, optim_config['epochs'] + 1):
-        train(epoch, model, optimizer, scheduler, criterion, train_loader,
-              run_config, writer)
-        accuracy = test(epoch, model, criterion, test_loader, run_config,
+        train_log = train(epoch, model, optimizer, scheduler, criterion,
+                          train_loader, run_config, writer)
+        test_log = test(epoch, model, criterion, test_loader, run_config,
                         writer)
+
+        epoch_log = train_log.copy()
+        epoch_log.update(test_log)
+        epoch_logs.append(epoch_log)
+        with open(outdir / 'log.json', 'w') as fout:
+            json.dump(epoch_logs, fout, indent=2)
 
         state = OrderedDict([
             ('config', config),
             ('state_dict', model.state_dict()),
             ('optimizer', optimizer.state_dict()),
             ('epoch', epoch),
-            ('accuracy', accuracy),
+            ('accuracy', test_log['test']['accuracy']),
         ])
         model_path = outdir / 'model_state.pth'
         torch.save(state, model_path)
