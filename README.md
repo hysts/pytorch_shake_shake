@@ -3,7 +3,7 @@
 ## Usage
 
 ```
-$ python main.py --depth 26 --base_channels 32 --shake_forward True --shake_backward True --shake_image True --outdir results
+$ python train.py --depth 26 --base_channels 32 --shake_forward True --shake_backward True --shake_image True --outdir results
 ```
 
 ## Results on CIFAR-10
