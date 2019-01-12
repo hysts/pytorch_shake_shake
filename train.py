@@ -55,6 +55,7 @@ def parse_args():
     parser.add_argument('--outdir', type=str, required=True)
     parser.add_argument('--seed', type=int, default=17)
     parser.add_argument('--num_workers', type=int, default=7)
+    parser.add_argument('--device', type=str, default='cuda')
 
     # optim config
     parser.add_argument('--epochs', type=int, default=1800)
@@ -102,6 +103,7 @@ def parse_args():
         ('seed', args.seed),
         ('outdir', args.outdir),
         ('num_workers', args.num_workers),
+        ('device', args.device),
         ('tensorboard', args.tensorboard),
     ])
 
@@ -164,6 +166,7 @@ def train(epoch, model, optimizer, scheduler, criterion, train_loader,
     logger.info('Train {}'.format(epoch))
 
     model.train()
+    device = torch.device(run_config['device'])
 
     loss_meter = AverageMeter()
     accuracy_meter = AverageMeter()
@@ -181,8 +184,8 @@ def train(epoch, model, optimizer, scheduler, criterion, train_loader,
             writer.add_scalar('Train/LearningRate',
                               scheduler.get_lr()[0], global_step)
 
-        data = data.cuda()
-        targets = targets.cuda()
+        data = data.to(device)
+        targets = targets.to(device)
 
         optimizer.zero_grad()
 
@@ -233,6 +236,7 @@ def test(epoch, model, criterion, test_loader, run_config, writer):
     logger.info('Test {}'.format(epoch))
 
     model.eval()
+    device = torch.device(run_config['device'])
 
     loss_meter = AverageMeter()
     correct_meter = AverageMeter()
@@ -244,8 +248,8 @@ def test(epoch, model, criterion, test_loader, run_config, writer):
                     data, normalize=True, scale_each=True)
                 writer.add_image('Test/Image', image, epoch)
 
-            data = data.cuda()
-            targets = targets.cuda()
+            data = data.to(device)
+            targets = targets.to(device)
 
             outputs = model(data)
             loss = criterion(outputs, targets)
@@ -308,11 +312,12 @@ def main():
 
     # data loaders
     train_loader, test_loader = get_loader(optim_config['batch_size'],
-                                           run_config['num_workers'])
+                                           run_config['num_workers'],
+                                           run_config['device'] != 'cpu')
 
     # model
     model = load_model(config['model_config'])
-    model.cuda()
+    model.to(torch.device(run_config['device']))
     n_params = sum([param.view(-1).size()[0] for param in model.parameters()])
     logger.info('n_params: {}'.format(n_params))
 
