@@ -1,22 +1,18 @@
 #!/usr/bin/env python
-# coding: utf-8
 
-import os
-import time
+import argparse
+from collections import OrderedDict
 import importlib
 import json
-from collections import OrderedDict
 import logging
-import argparse
-import numpy as np
+import pathlib
 import random
+import time
+import numpy as np
 
 import torch
 import torch.nn as nn
-import torch.optim
-import torch.utils.data
-import torch.backends.cudnn
-import torchvision.utils
+import torchvision
 try:
     from tensorboardX import SummaryWriter
     is_tensorboard_available = True
@@ -125,7 +121,7 @@ def load_model(config):
     return Network(config)
 
 
-class AverageMeter(object):
+class AverageMeter:
     def __init__(self):
         self.reset()
 
@@ -241,27 +237,27 @@ def test(epoch, model, criterion, test_loader, run_config, writer):
     loss_meter = AverageMeter()
     correct_meter = AverageMeter()
     start = time.time()
-    for step, (data, targets) in enumerate(test_loader):
-        if run_config['tensorboard'] and epoch == 0 and step == 0:
-            image = torchvision.utils.make_grid(
-                data, normalize=True, scale_each=True)
-            writer.add_image('Test/Image', image, epoch)
+    with torch.no_grad():
+        for step, (data, targets) in enumerate(test_loader):
+            if run_config['tensorboard'] and epoch == 0 and step == 0:
+                image = torchvision.utils.make_grid(
+                    data, normalize=True, scale_each=True)
+                writer.add_image('Test/Image', image, epoch)
 
-        data = data.cuda()
-        targets = targets.cuda()
+            data = data.cuda()
+            targets = targets.cuda()
 
-        with torch.no_grad():
             outputs = model(data)
-        loss = criterion(outputs, targets)
+            loss = criterion(outputs, targets)
 
-        _, preds = torch.max(outputs, dim=1)
+            _, preds = torch.max(outputs, dim=1)
 
-        loss_ = loss.item()
-        correct_ = preds.eq(targets).sum().item()
-        num = data.size(0)
+            loss_ = loss.item()
+            correct_ = preds.eq(targets).sum().item()
+            num = data.size(0)
 
-        loss_meter.update(loss_, num)
-        correct_meter.update(correct_, 1)
+            loss_meter.update(loss_, num)
+            correct_meter.update(correct_, 1)
 
     accuracy = correct_meter.sum / len(test_loader.dataset)
 
@@ -291,9 +287,6 @@ def main():
     run_config = config['run_config']
     optim_config = config['optim_config']
 
-    # TensorBoard SummaryWriter
-    writer = SummaryWriter() if run_config['tensorboard'] else None
-
     # set random seed
     seed = run_config['seed']
     torch.manual_seed(seed)
@@ -301,12 +294,15 @@ def main():
     random.seed(seed)
 
     # create output directory
-    outdir = run_config['outdir']
-    if not os.path.exists(outdir):
-        os.makedirs(outdir)
+    outdir = pathlib.Path(run_config['outdir'])
+    outdir.mkdir(exist_ok=True, parents=True)
+
+    # TensorBoard SummaryWriter
+    writer = SummaryWriter(
+        outdir.as_posix()) if run_config['tensorboard'] else None
 
     # save config as json file in output directory
-    outpath = os.path.join(outdir, 'config.json')
+    outpath = outdir / 'config.json'
     with open(outpath, 'w') as fout:
         json.dump(config, fout, indent=2)
 
@@ -320,7 +316,7 @@ def main():
     n_params = sum([param.view(-1).size()[0] for param in model.parameters()])
     logger.info('n_params: {}'.format(n_params))
 
-    criterion = nn.CrossEntropyLoss(size_average=True)
+    criterion = nn.CrossEntropyLoss(reduction='mean')
 
     optim_config['steps_per_epoch'] = len(train_loader)
     # optimizer
@@ -348,12 +344,8 @@ def main():
             ('epoch', epoch),
             ('accuracy', accuracy),
         ])
-        model_path = os.path.join(outdir, 'model_state.pth')
+        model_path = outdir / 'model_state.pth'
         torch.save(state, model_path)
-
-    if run_config['tensorboard']:
-        outpath = os.path.join(outdir, 'all_scalars.json')
-        writer.export_scalars_to_json(outpath)
 
 
 if __name__ == '__main__':
