@@ -19,10 +19,14 @@ def get_loader(batch_size, num_workers, use_gpu):
     ])
 
     dataset_dir = '~/.torchvision/datasets/CIFAR10'
-    train_dataset = torchvision.datasets.CIFAR10(
-        dataset_dir, train=True, transform=train_transform, download=True)
-    test_dataset = torchvision.datasets.CIFAR10(
-        dataset_dir, train=False, transform=test_transform, download=True)
+    train_dataset = torchvision.datasets.CIFAR10(dataset_dir,
+                                                 train=True,
+                                                 transform=train_transform,
+                                                 download=True)
+    test_dataset = torchvision.datasets.CIFAR10(dataset_dir,
+                                                train=False,
+                                                transform=test_transform,
+                                                download=True)
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset,

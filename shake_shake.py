@@ -28,13 +28,12 @@ class ResidualPath(nn.Module):
             bias=False,
         )
         self.bn1 = nn.BatchNorm2d(out_channels)
-        self.conv2 = nn.Conv2d(
-            out_channels,
-            out_channels,
-            kernel_size=3,
-            stride=1,
-            padding=1,
-            bias=False)
+        self.conv2 = nn.Conv2d(out_channels,
+                               out_channels,
+                               kernel_size=3,
+                               stride=1,
+                               padding=1,
+                               bias=False)
         self.bn2 = nn.BatchNorm2d(out_channels)
 
     def forward(self, x):
@@ -47,20 +46,18 @@ class ResidualPath(nn.Module):
 class DownsamplingShortcut(nn.Module):
     def __init__(self, in_channels):
         super(DownsamplingShortcut, self).__init__()
-        self.conv1 = nn.Conv2d(
-            in_channels,
-            in_channels,
-            kernel_size=1,
-            stride=1,
-            padding=0,
-            bias=False)
-        self.conv2 = nn.Conv2d(
-            in_channels,
-            in_channels,
-            kernel_size=1,
-            stride=1,
-            padding=0,
-            bias=False)
+        self.conv1 = nn.Conv2d(in_channels,
+                               in_channels,
+                               kernel_size=1,
+                               stride=1,
+                               padding=0,
+                               bias=False)
+        self.conv2 = nn.Conv2d(in_channels,
+                               in_channels,
+                               kernel_size=1,
+                               stride=1,
+                               padding=0,
+                               bias=False)
         self.bn = nn.BatchNorm2d(in_channels * 2)
 
     def forward(self, x):
@@ -125,21 +122,29 @@ class Network(nn.Module):
 
         n_channels = [base_channels, base_channels * 2, base_channels * 4]
 
-        self.conv = nn.Conv2d(
-            input_shape[1],
-            n_channels[0],
-            kernel_size=3,
-            stride=1,
-            padding=1,
-            bias=False)
+        self.conv = nn.Conv2d(input_shape[1],
+                              n_channels[0],
+                              kernel_size=3,
+                              stride=1,
+                              padding=1,
+                              bias=False)
         self.bn = nn.BatchNorm2d(base_channels)
 
-        self.stage1 = self._make_stage(
-            n_channels[0], n_channels[0], n_blocks_per_stage, block, stride=1)
-        self.stage2 = self._make_stage(
-            n_channels[0], n_channels[1], n_blocks_per_stage, block, stride=2)
-        self.stage3 = self._make_stage(
-            n_channels[1], n_channels[2], n_blocks_per_stage, block, stride=2)
+        self.stage1 = self._make_stage(n_channels[0],
+                                       n_channels[0],
+                                       n_blocks_per_stage,
+                                       block,
+                                       stride=1)
+        self.stage2 = self._make_stage(n_channels[0],
+                                       n_channels[1],
+                                       n_blocks_per_stage,
+                                       block,
+                                       stride=2)
+        self.stage3 = self._make_stage(n_channels[1],
+                                       n_channels[2],
+                                       n_blocks_per_stage,
+                                       block,
+                                       stride=2)
 
         # compute conv feature size
         with torch.no_grad():
@@ -158,19 +163,17 @@ class Network(nn.Module):
             if index == 0:
                 stage.add_module(
                     block_name,
-                    block(
-                        in_channels,
-                        out_channels,
-                        stride=stride,
-                        shake_config=self.shake_config))
+                    block(in_channels,
+                          out_channels,
+                          stride=stride,
+                          shake_config=self.shake_config))
             else:
                 stage.add_module(
                     block_name,
-                    block(
-                        out_channels,
-                        out_channels,
-                        stride=1,
-                        shake_config=self.shake_config))
+                    block(out_channels,
+                          out_channels,
+                          stride=1,
+                          shake_config=self.shake_config))
         return stage
 
     def _forward_conv(self, x):

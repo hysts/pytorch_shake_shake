@@ -67,8 +67,9 @@ def parse_args():
     parser.add_argument('--lr_min', type=float, default=0)
 
     # TensorBoard
-    parser.add_argument(
-        '--tensorboard', dest='tensorboard', action='store_true')
+    parser.add_argument('--tensorboard',
+                        dest='tensorboard',
+                        action='store_true')
 
     args = parser.parse_args()
     if not is_tensorboard_available:
@@ -141,8 +142,8 @@ class AverageMeter:
 
 
 def _cosine_annealing(step, total_steps, lr_max, lr_min):
-    return lr_min + (lr_max - lr_min) * 0.5 * (
-        1 + np.cos(step / total_steps * np.pi))
+    return lr_min + (lr_max -
+                     lr_min) * 0.5 * (1 + np.cos(step / total_steps * np.pi))
 
 
 def get_cosine_annealing_scheduler(optimizer, optim_config):
@@ -175,8 +176,9 @@ def train(epoch, model, optimizer, scheduler, criterion, train_loader,
         global_step += 1
 
         if run_config['tensorboard'] and step == 0:
-            image = torchvision.utils.make_grid(
-                data, normalize=True, scale_each=True)
+            image = torchvision.utils.make_grid(data,
+                                                normalize=True,
+                                                scale_each=True)
             writer.add_image('Train/Image', image, epoch)
 
         scheduler.step()
@@ -256,8 +258,9 @@ def test(epoch, model, criterion, test_loader, run_config, writer):
     with torch.no_grad():
         for step, (data, targets) in enumerate(test_loader):
             if run_config['tensorboard'] and epoch == 0 and step == 0:
-                image = torchvision.utils.make_grid(
-                    data, normalize=True, scale_each=True)
+                image = torchvision.utils.make_grid(data,
+                                                    normalize=True,
+                                                    scale_each=True)
                 writer.add_image('Test/Image', image, epoch)
 
             data = data.to(device)
@@ -347,12 +350,11 @@ def main():
 
     optim_config['steps_per_epoch'] = len(train_loader)
     # optimizer
-    optimizer = torch.optim.SGD(
-        model.parameters(),
-        lr=optim_config['base_lr'],
-        momentum=optim_config['momentum'],
-        weight_decay=optim_config['weight_decay'],
-        nesterov=optim_config['nesterov'])
+    optimizer = torch.optim.SGD(model.parameters(),
+                                lr=optim_config['base_lr'],
+                                momentum=optim_config['momentum'],
+                                weight_decay=optim_config['weight_decay'],
+                                nesterov=optim_config['nesterov'])
     scheduler = get_cosine_annealing_scheduler(optimizer, optim_config)
 
     # run test before start training
