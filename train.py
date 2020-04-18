@@ -181,7 +181,6 @@ def train(epoch, model, optimizer, scheduler, criterion, train_loader,
                                                 scale_each=True)
             writer.add_image('Train/Image', image, epoch)
 
-        scheduler.step()
         if run_config['tensorboard']:
             writer.add_scalar('Train/LearningRate',
                               scheduler.get_lr()[0], global_step)
@@ -224,6 +223,7 @@ def train(epoch, model, optimizer, scheduler, criterion, train_loader,
                             accuracy_meter.val,
                             accuracy_meter.avg,
                         ))
+        scheduler.step()
 
     elapsed = time.time() - start
     logger.info('Elapsed {:.2f}'.format(elapsed))
