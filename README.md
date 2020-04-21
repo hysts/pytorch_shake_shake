@@ -10,13 +10,13 @@ $ python train.py --depth 26 --base_channels 32 --shake_forward True --shake_bac
 
 | Model                        | Test Error (median of 3 runs) | Test Error (in paper)    | Training Time |
 |:-----------------------------|:-----------------------------:|:------------------------:|--------------:|
-| shake-shake-26 2x32d (S-S-I) | 3.68                          | 3.55 (average of 3 runs) |  33h49m       |
-| shake-shake-26 2x64d (S-S-I) | 2.88 (1 run)                  | 2.98 (average of 3 runs) |  78h48m       |
-| shake-shake-26 2x96d (S-S-I) | 2.90 (1 run)                  | 2.86 (average of 5 runs) | 101h32m*      |
+| shake-shake-26 2x32d (S-S-I) | 3.68                          | 3.55 (average of 3 runs) |    11h16m     |
+| shake-shake-26 2x64d (S-S-I) | 2.88 (1 run)                  | 2.98 (average of 3 runs) |    19h43m     |
+| shake-shake-26 2x96d (S-S-I) | 2.90 (1 run)                  | 2.86 (average of 5 runs) |    32h10m     |
 
 ### Notes
 
-* The model of shake-shake-26 2x64d (S-S-I) is trained with batch size 64, and initial learning rate 0.1.
+* Tesla V100 was used in these experiments.
 
 ![](figures/shake-shake-26_2x32d.png)
 ![](figures/shake-shake-26_2x64d.png)
